@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 import math
@@ -51,7 +50,7 @@ class Matriz:
                 resultado.set_valor(i, j, soma)
         return resultado
 
-    @staticmethod
+
     def from_point(x, y):
         matriz = Matriz(3, 1)
         matriz.set_valor(0, 0, x)
@@ -59,7 +58,7 @@ class Matriz:
         matriz.set_valor(2, 0, 1)
         return matriz
 
-    @staticmethod
+
     def translation(dx, dy):
         matriz = Matriz(3, 3)
         matriz.set_valor(0, 0, 1)
@@ -69,7 +68,6 @@ class Matriz:
         matriz.set_valor(1, 2, dy)
         return matriz
 
-    @staticmethod
     def rotation(angle_degrees):
         angle_radians = math.radians(angle_degrees)
         cos_theta = math.cos(angle_radians)
@@ -82,7 +80,7 @@ class Matriz:
         matriz.set_valor(2, 2, 1)
         return matriz
 
-    @staticmethod
+
     def scaling(sx, sy):
         matriz = Matriz(3, 3)
         matriz.set_valor(0, 0, sx)
@@ -90,7 +88,7 @@ class Matriz:
         matriz.set_valor(2, 2, 1)
         return matriz
 
-    @staticmethod
+
     def rotation_around_point(angle_degrees, cx, cy):
         angle_radians = math.radians(angle_degrees)
         cos_theta = math.cos(angle_radians)
@@ -105,7 +103,7 @@ class Matriz:
         translation_back = Matriz.translation(cx, cy)
         return translation_back * rotation * translation_to_origin
 
-    @staticmethod
+
     def scaling_from_point(sx, sy, px, py):
         translation_to_origin = Matriz.translation(-px, -py)
         scaling = Matriz(3, 3)
@@ -115,10 +113,23 @@ class Matriz:
         translation_back = Matriz.translation(px, py)
         return translation_back * scaling * translation_to_origin
 
-def to_screen_coords(x, y, canvas_width, canvas_height, window_x, window_y, zoom):
-    x = (x - window_x) * zoom
-    y = (y - window_y) * zoom
-    return (canvas_width // 2 + int(x), canvas_height // 2 - int(y))
+
+    def reflection(x_axis=False, y_axis=False):
+        matriz = Matriz(3, 3)
+        matriz.set_valor(0, 0, -1 if y_axis else 1)
+        matriz.set_valor(1, 1, -1 if x_axis else 1)
+        matriz.set_valor(2, 2, 1)
+        return matriz
+
+
+    def shear(shx=0, shy=0):
+        matriz = Matriz(3, 3)
+        matriz.set_valor(0, 0, 1)
+        matriz.set_valor(0, 1, shx)
+        matriz.set_valor(1, 0, shy)
+        matriz.set_valor(1, 1, 1)
+        matriz.set_valor(2, 2, 1)
+        return matriz
 
 class Application(tk.Tk):
     def __init__(self):
@@ -142,15 +153,15 @@ class Application(tk.Tk):
         tk.Button(self.button_frame, text="Transladar", command=self.translate_object).pack(side=tk.TOP, padx=5, pady=5)
         tk.Button(self.button_frame, text="Rotacionar", command=self.rotate_object).pack(side=tk.TOP, padx=5, pady=5)
         tk.Button(self.button_frame, text="Escalonar", command=self.scale_object).pack(side=tk.TOP, padx=5, pady=5)
-        tk.Button(self.button_frame, text="Rotacionar em torno de ponto", command=self.rotate_object_around_point).pack(side=tk.TOP, padx=5, pady=5)
-        tk.Button(self.button_frame, text="Escalonar a partir do primeiro vértice", command=self.scale_object_from_first_vertex).pack(side=tk.TOP, padx=5, pady=5)
+        tk.Button(self.button_frame, text="Refletir", command=self.reflect_object).pack(side=tk.TOP, padx=5, pady=5)
+        tk.Button(self.button_frame, text="Cisalhamento", command=self.shear_object).pack(side=tk.TOP, padx=5, pady=5)
         tk.Button(self.button_frame, text="Panning Esquerda", command=lambda: self.pan(-20, 0)).pack(side=tk.TOP, padx=5, pady=5)
         tk.Button(self.button_frame, text="Panning Direita", command=lambda: self.pan(20, 0)).pack(side=tk.TOP, padx=5, pady=5)
         tk.Button(self.button_frame, text="Panning Cima", command=lambda: self.pan(0, -20)).pack(side=tk.TOP, padx=5, pady=5)
         tk.Button(self.button_frame, text="Panning Baixo", command=lambda: self.pan(0, 20)).pack(side=tk.TOP, padx=5, pady=5)
-        tk.Button(self.button_frame, text="Zoom In", command=self.zoom_in).pack(side=tk.TOP, padx=5, pady=5)
-        tk.Button(self.button_frame, text="Zoom Out", command=self.zoom_out).pack(side=tk.TOP, padx=5, pady=5)
-        self.update_viewport()
+        tk.Button(self.button_frame, text="Zoom In", command=lambda: self.zoom_in_out(1.2)).pack(side=tk.TOP, padx=5, pady=5)
+        tk.Button(self.button_frame, text="Zoom Out", command=lambda: self.zoom_in_out(0.8)).pack(side=tk.TOP, padx=5, pady=5)
+        self.refresh_canvas()
 
     def add_point(self):
         x = simpledialog.askfloat("Adicionar Ponto", "Coord X:")
